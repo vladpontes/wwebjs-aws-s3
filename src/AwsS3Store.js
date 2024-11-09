@@ -27,7 +27,7 @@ class AwsS3Store {
     this.debugEnabled = process.env.STORE_DEBUG === 'true';
   }
 
-  async isValidConfig(options) {
+  async isValidConfig (options) {
     if (!options.session) {
       console.log('Error: A valid session is required for AwsS3Store.')
       return false
@@ -60,7 +60,11 @@ class AwsS3Store {
   async sessionExists(options) {
     this.debugLog('[METHOD: sessionExists] Triggered.');
 
-    if (await this.isValidConfig(options) === false) return
+    if (await this.isValidConfig(options) === false){
+      this.debugLog('[METHOD: sessionExists] isValidConfig = false.');
+
+      return
+    } 
 
     const remoteFilePath = path.join(this.remoteDataPath, `${options.session}.zip`).replace(/\\/g, '/');
     const params = {
@@ -89,11 +93,13 @@ class AwsS3Store {
 
     const remoteFilePath = path.join(this.remoteDataPath, `${options.session}.zip`).replace(/\\/g, '/');
     options.remoteFilePath = remoteFilePath;
-
+    
     // await this.#deletePrevious(options);
-
+    
     try {
-      const fileStream = fs.createReadStream(path.join(options.userDataDir, `${options.session}.zip`));
+      // const fileStream = fs.createReadStream(path.join(options.userDataDir, `${options.session}.zip`));
+
+      const fileStream = fs.createReadStream(`${options.session}.zip`);
       const params = {
         Bucket: this.bucketName,
         Key: remoteFilePath,
@@ -105,7 +111,7 @@ class AwsS3Store {
       this.debugLog(`[METHOD: save] File saved. PATH='${remoteFilePath}'.`);
     } catch (error) {
       this.debugLog(`[METHOD: save] Error: ${error.message}`);
-      throw error;
+      throw error;      
     }
 
   }
@@ -129,7 +135,7 @@ class AwsS3Store {
           .on('error', reject)
           .on('finish', resolve);
       });
-
+  
       this.debugLog(`[METHOD: extract] File extracted. REMOTE_PATH='${remoteFilePath}', LOCAL_PATH='${options.path}'.`);
     } catch (error) {
       this.debugLog(`[METHOD: extract] Error: ${error.message}`);
@@ -155,7 +161,7 @@ class AwsS3Store {
       if (err.name === 'NoSuchKey' || err.name === 'NotFound') {
         this.debugLog(`[METHOD: delete] File not found. PATH='${remoteFilePath}'.`);
         return;
-      }
+      } 
       this.debugLog(`[METHOD: delete] Error: ${err.message}`);
       // throw err;
       return
