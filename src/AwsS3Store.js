@@ -35,7 +35,6 @@ class AwsS3Store {
    * @param {Object} options.s3Client The S3Client instance after configuring the AWS SDK.
    */
   constructor({ bucketName, remoteDataPath, s3Client, storage } = {}) {
-    console.log('starting constructor')
     if (!bucketName) throw new Error("A valid bucket name is required for AwsS3Store.");
     if (!remoteDataPath) throw new Error("A valid remote dir path is required for AwsS3Store.");
     // if (!s3Client) throw new Error("A valid S3Client instance is required for AwsS3Store.");
@@ -44,6 +43,7 @@ class AwsS3Store {
     this.s3Client = s3Client;
     this.storage = storage;
     this.debugEnabled = process.env.STORE_DEBUG === 'true';
+    this.debugLog('starting new storage constructor');
   }
 
   async isValidConfig(options) {
@@ -65,10 +65,10 @@ class AwsS3Store {
     }
 
     try {
-      const result = await this.s3Client.send(new ListObjectsCommand({ Bucket: this.bucketName }))
-      if (!result.$metadata) return false
-      if (!result.$metadata.httpStatusCode) return false
-      if (result.$metadata.httpStatusCode !== 200) return false
+      // const result = await this.s3Client.send(new ListObjectsCommand({ Bucket: this.bucketName }))
+      // if (!result.$metadata) return false
+      // if (!result.$metadata.httpStatusCode) return false
+      // if (result.$metadata.httpStatusCode !== 200) return false
       return true
     } catch (error) {
       console.log('Error: Invalid AwsS3Store configuration', error)
@@ -90,10 +90,9 @@ class AwsS3Store {
     const remoteFilePath = path.join(this.remoteDataPath, `${options.session}.zip`).replace(/\\/g, '/');
 
     try {
-
       if (this.storage) {
         storageDownload(this.storage, remoteFilePath)
-      } else {
+      } else if (this.s3Client) {
         headCheck(this.s3Client, {
           Bucket: this.bucketName,
           Key: remoteFilePath
