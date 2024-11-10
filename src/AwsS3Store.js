@@ -10,6 +10,8 @@ const storageDownload = async (storage, remoteFilePath) => {
     const downloadResult = await downloadData({
       path: remoteFilePath
     }).result;
+    console.log('downloadData::', downloadResult)
+
   } catch (err) {
     console.log(err);
     throw err;
@@ -43,7 +45,7 @@ class AwsS3Store {
     this.s3Client = s3Client;
     this.storage = storage;
     this.debugEnabled = process.env.STORE_DEBUG === 'true';
-    this.debugLog('starting new storage constructor');
+    this.debugLog('starting new storage constructor v1');
   }
 
   async isValidConfig(options) {
