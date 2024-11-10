@@ -202,7 +202,5 @@ class AwsS3Store {
   }
 }
 
-module.exports = {
-  AwsS3Store,
-  S3Client
-};
+module.exports = AwsS3Store;
+
