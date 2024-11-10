@@ -3,9 +3,16 @@ const fs = require('fs');
 const AWS = require('@aws-sdk/client-s3')
 const { S3Client, ListObjectsCommand, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = AWS
 
+const debugLog = (msg) => {
+  if (this.debugEnabled) {
+    const timestamp = new Date().toISOString();
+    console.log(`${timestamp} [STORE_DEBUG] ${msg}`);
+  }
+}
 
 const storageDownload = async (storage, remoteFilePath) => {
   try {
+    debugLog('iniciando storage Download')
     const { downloadData } = storage;
     const downloadResult = await downloadData({
       path: remoteFilePath
@@ -20,6 +27,7 @@ const storageDownload = async (storage, remoteFilePath) => {
 
 const headCheck = async (s3Client, params) => {
   try {
+    debugLog('iniciando headCheck')
     await s3Client.send(new HeadObjectCommand(params));
   } catch (err) {
     console.log(err);
@@ -45,7 +53,7 @@ class AwsS3Store {
     this.s3Client = s3Client;
     this.storage = storage;
     this.debugEnabled = process.env.STORE_DEBUG === 'true';
-    this.debugLog('starting new storage constructor v1');
+    this.debugLog('starting new storage constructor v2');
   }
 
   async isValidConfig(options) {
