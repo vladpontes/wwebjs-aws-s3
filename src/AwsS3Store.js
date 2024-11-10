@@ -3,6 +3,17 @@ const fs = require('fs');
 const AWS = require('@aws-sdk/client-s3')
 const { S3Client, ListObjectsCommand, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = AWS
 
+
+const storageDownload = async (storage, remoteFilePath) => {
+  const { downloadData } = storage;
+  const downloadResult = await downloadData({
+    path: remoteFilePath
+  }).result;
+}
+
+const headCheck = async (s3Client, params) => {
+  await s3Client.send(new HeadObjectCommand(params));
+}
 class AwsS3Store {
   /**
    * A class for storing authentication data of Whatsapp-web.js to AWS S3.
@@ -12,12 +23,8 @@ class AwsS3Store {
    * @param {String} options.bucketName Specifies the S3 bucket name.
    * @param {String} options.remoteDataPath Specifies the remote path to save authentication files.
    * @param {Object} options.s3Client The S3Client instance after configuring the AWS SDK.
-   * @param {Object} options.putObjectCommand  The PutObjectCommand class from `@aws-sdk/client-s3`.
-   * @param {Object} options.headObjectCommand  The HeadObjectCommand class from `@aws-sdk/client-s3`.
-   * @param {Object} options.getObjectCommand  The GetObjectCommand class from `@aws-sdk/client-s3`.
-   * @param {Object} options.deleteObjectCommand  The DeleteObjectCommand class from `@aws-sdk/client-s3`.
    */
-  constructor({ bucketName, remoteDataPath, s3Client } = {}) {
+  constructor({ bucketName, remoteDataPath, s3Client, storage } = {}) {
     console.log('starting constructor')
     if (!bucketName) throw new Error("A valid bucket name is required for AwsS3Store.");
     if (!remoteDataPath) throw new Error("A valid remote dir path is required for AwsS3Store.");
@@ -25,10 +32,11 @@ class AwsS3Store {
     this.bucketName = bucketName;
     this.remoteDataPath = remoteDataPath;
     this.s3Client = s3Client;
+    this.storage = storage;
     this.debugEnabled = process.env.STORE_DEBUG === 'true';
   }
 
-  async isValidConfig (options) {
+  async isValidConfig(options) {
     if (!options.session) {
       console.log('Error: A valid session is required for AwsS3Store.')
       return false
@@ -58,22 +66,29 @@ class AwsS3Store {
     }
   }
 
+
+
   async sessionExists(options) {
     this.debugLog('[METHOD: sessionExists] Triggered.');
 
-    if (await this.isValidConfig(options) === false){
+    if (await this.isValidConfig(options) === false) {
       this.debugLog('[METHOD: sessionExists] isValidConfig = false.');
 
       return
-    } 
+    }
 
     const remoteFilePath = path.join(this.remoteDataPath, `${options.session}.zip`).replace(/\\/g, '/');
-    const params = {
-      Bucket: this.bucketName,
-      Key: remoteFilePath
-    };
+
     try {
-      await this.s3Client.send(new HeadObjectCommand(params));
+
+      if (this.storage) {
+        storageDownload(this.storage, remoteFilePath)
+      } else {
+        headCheck(this.s3Client, {
+          Bucket: this.bucketName,
+          Key: remoteFilePath
+        })
+      }
       this.debugLog(`[METHOD: sessionExists] File found. PATH='${remoteFilePath}'.`);
       return true;
     } catch (err) {
@@ -85,6 +100,11 @@ class AwsS3Store {
       // throw err;
       return
     }
+
+
+
+
+
   }
 
   async save(options) {
@@ -94,9 +114,9 @@ class AwsS3Store {
 
     const remoteFilePath = path.join(this.remoteDataPath, `${options.session}.zip`).replace(/\\/g, '/');
     options.remoteFilePath = remoteFilePath;
-    
+
     // await this.#deletePrevious(options);
-    
+
     try {
       // const fileStream = fs.createReadStream(path.join(options.userDataDir, `${options.session}.zip`));
 
@@ -112,7 +132,7 @@ class AwsS3Store {
       this.debugLog(`[METHOD: save] File saved. PATH='${remoteFilePath}'.`);
     } catch (error) {
       this.debugLog(`[METHOD: save] Error: ${error.message}`);
-      throw error;      
+      throw error;
     }
 
   }
@@ -136,7 +156,7 @@ class AwsS3Store {
           .on('error', reject)
           .on('finish', resolve);
       });
-  
+
       this.debugLog(`[METHOD: extract] File extracted. REMOTE_PATH='${remoteFilePath}', LOCAL_PATH='${options.path}'.`);
     } catch (error) {
       this.debugLog(`[METHOD: extract] Error: ${error.message}`);
@@ -162,7 +182,7 @@ class AwsS3Store {
       if (err.name === 'NoSuchKey' || err.name === 'NotFound') {
         this.debugLog(`[METHOD: delete] File not found. PATH='${remoteFilePath}'.`);
         return;
-      } 
+      }
       this.debugLog(`[METHOD: delete] Error: ${err.message}`);
       // throw err;
       return
@@ -201,6 +221,8 @@ class AwsS3Store {
     }
   }
 }
+
+
 
 module.exports = AwsS3Store;
 
