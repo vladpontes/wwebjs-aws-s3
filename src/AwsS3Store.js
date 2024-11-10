@@ -5,14 +5,24 @@ const { S3Client, ListObjectsCommand, PutObjectCommand, HeadObjectCommand, GetOb
 
 
 const storageDownload = async (storage, remoteFilePath) => {
-  const { downloadData } = storage;
-  const downloadResult = await downloadData({
-    path: remoteFilePath
-  }).result;
+  try {
+    const { downloadData } = storage;
+    const downloadResult = await downloadData({
+      path: remoteFilePath
+    }).result;
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
 }
 
 const headCheck = async (s3Client, params) => {
-  await s3Client.send(new HeadObjectCommand(params));
+  try {
+    await s3Client.send(new HeadObjectCommand(params));
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
 }
 class AwsS3Store {
   /**
@@ -49,8 +59,8 @@ class AwsS3Store {
       console.log('Error: A valid remote dir path is required for AwsS3Store.')
       return false
     }
-    if (!this.s3Client) {
-      console.log('Error: A valid S3Client instance is required for AwsS3Store.')
+    if (!this.s3Client && !this.storage) {
+      console.log('Error: A valid S3Client or storage instance is required for AwsS3Store.')
       return false
     }
 
