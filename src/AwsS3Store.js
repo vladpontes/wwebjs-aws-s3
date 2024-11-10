@@ -18,6 +18,7 @@ class AwsS3Store {
    * @param {Object} options.deleteObjectCommand  The DeleteObjectCommand class from `@aws-sdk/client-s3`.
    */
   constructor({ bucketName, remoteDataPath, s3Client } = {}) {
+    console.log('starting constructor')
     if (!bucketName) throw new Error("A valid bucket name is required for AwsS3Store.");
     if (!remoteDataPath) throw new Error("A valid remote dir path is required for AwsS3Store.");
     // if (!s3Client) throw new Error("A valid S3Client instance is required for AwsS3Store.");
