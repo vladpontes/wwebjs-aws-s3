@@ -1,9 +1,16 @@
 const path = require('path');
 const fs = require('fs');
 const AWS = require('@aws-sdk/client-s3')
-const { S3Client, ListObjectsCommand, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = AWS
+const { PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } = AWS
+const debugEnabled = process.env.STORE_DEBUG === 'true';
 
 
+const debugLog = (msg) => {
+  if (debugEnabled) {
+    const timestamp = new Date().toISOString();
+    console.log(`${timestamp} [STORE_DEBUG] ${msg}`);
+  }
+}
 
 const storageDownload = async (storage, remoteFilePath) => {
   try {
