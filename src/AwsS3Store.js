@@ -5,6 +5,30 @@ const { S3Client, ListObjectsCommand, PutObjectCommand, HeadObjectCommand, GetOb
 
 
 
+const storageDownload = async (storage, remoteFilePath) => {
+  try {
+    debugLog('iniciando storage Download')
+    const { downloadData } = storage;
+    const downloadResult = await downloadData({
+      path: remoteFilePath
+    }).result;
+    console.log('downloadData::', downloadResult)
+
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+}
+
+const headCheck = async (s3Client, params) => {
+  try {
+    debugLog('iniciando headCheck')
+    await s3Client.send(new HeadObjectCommand(params));
+  } catch (err) {
+    console.log(err);
+    throw err;
+  }
+}
 class AwsS3Store {
   /**
    * A class for storing authentication data of Whatsapp-web.js to AWS S3.
@@ -24,7 +48,7 @@ class AwsS3Store {
     this.s3Client = s3Client;
     this.storage = storage;
     this.debugEnabled = process.env.STORE_DEBUG === 'true';
-    this.debugLog('starting new storage constructor v3');
+    this.debugLog('starting new storage constructor v4');
   }
 
   async isValidConfig(options) {
@@ -58,31 +82,6 @@ class AwsS3Store {
   }
 
 
-  storageDownload = async (storage, remoteFilePath) => {
-    try {
-      debugLog('iniciando storage Download')
-      const { downloadData } = storage;
-      const downloadResult = await downloadData({
-        path: remoteFilePath
-      }).result;
-      console.log('downloadData::', downloadResult)
-
-    } catch (err) {
-      console.log(err);
-      throw err;
-    }
-  }
-
-  headCheck = async (s3Client, params) => {
-    try {
-      debugLog('iniciando headCheck')
-      await s3Client.send(new HeadObjectCommand(params));
-    } catch (err) {
-      console.log(err);
-      throw err;
-    }
-  }
-
 
   async sessionExists(options) {
     this.debugLog('[METHOD: sessionExists] Triggered.');
@@ -97,9 +96,9 @@ class AwsS3Store {
 
     try {
       if (this.storage) {
-        storageDownload(this.storage, remoteFilePath)
+        await storageDownload(this.storage, remoteFilePath)
       } else if (this.s3Client) {
-        headCheck(this.s3Client, {
+        await headCheck(this.s3Client, {
           Bucket: this.bucketName,
           Key: remoteFilePath
         })
