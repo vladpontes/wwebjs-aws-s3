@@ -97,7 +97,7 @@ class AwsS3Store {
     try {
       // const fileStream = fs.createReadStream(path.join(options.userDataDir, `${options.session}.zip`));
 
-      const fileStream = fs.createReadStream(`${options.session}.zip`);
+      const fileStream = fs.createReadStream(path.join('/tmp', `${options.session}.zip`));
       const params = {
         Bucket: this.bucketName,
         Key: remoteFilePath,
