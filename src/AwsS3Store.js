@@ -15,7 +15,7 @@ class AwsS3Store {
    
    */
   constructor({ bucketName, remoteDataPath, s3Client } = {}) {
-    console.log('starting store constructor v1')
+    console.log('starting store constructor v2')
     if (!bucketName) throw new Error("A valid bucket name is required for AwsS3Store.");
     if (!remoteDataPath) throw new Error("A valid remote dir path is required for AwsS3Store.");
     // if (!s3Client) throw new Error("A valid S3Client instance is required for AwsS3Store.");
